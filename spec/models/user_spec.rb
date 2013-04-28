@@ -2,11 +2,13 @@
 #
 # Table name: users
 #
-#  id         :integer          not null, primary key
-#  name       :string(255)
-#  email      :string(255)
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id              :integer          not null, primary key
+#  name            :string(255)
+#  email           :string(255)
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  password_digest :string(255)
+#  name_pretty     :string(255)
 #
 
 require 'spec_helper'
@@ -14,13 +16,14 @@ require 'spec_helper'
 describe User do
 
   before do
-    @user = User.new(name: "Example User", email: "user@example.com",
+    @user = User.new(name_pretty: "kalmas", email: "user@example.com",
         password: "foobar", password_confirmation: "foobar")
   end
 
   subject { @user }
-
+  
   it { should respond_to(:name) }
+  it { should respond_to(:name_pretty) }
   it { should respond_to(:email) }
   it { should respond_to(:password_digest) }
   it { should respond_to(:password) }
@@ -29,18 +32,56 @@ describe User do
     
   it { should be_valid }
     
-  describe "when name is not present" do
-    before { @user.name = " " }
+  describe "when created" do
+    it "should have a name attribute that is lowercased name_pretty" do
+      @user.name_pretty = "Kalmas"
+      @user.name.should eq("kalmas")
+    end
+  end
+  
+  describe "when name_pretty is not present" do
+    before { @user.name_pretty = " " }
     it { should_not be_valid }
   end
   
-  describe "when name is nil" do
-    before { @user.name = nil }
+  describe "when name_pretty is nil" do
+    before { @user.name_pretty = nil }
     it { should_not be_valid }
   end
   
-  describe "when name is too long" do
-    before { @user.name = "a" * 51 }
+  describe "when name_pretty is too long" do
+    before { @user.name_pretty = "a" * 51 }
+    it { should_not be_valid }
+  end
+  
+  describe "when name_pretty format is invalid" do
+    it "should be invalid" do
+      names = ['kyle almas', 'kyle#']
+      names.each do |invalid_name|
+        @user.name_pretty = invalid_name
+        @user.should_not be_valid
+      end      
+    end
+  end
+  
+  describe "when name_pretty format is valid" do
+    it "should be valid" do
+      names = ['kyle.almas', 'KALMAS1', 'kyle_almas']
+      names.each do |valid_name|
+        @user.name_pretty = valid_name
+        @user.should be_valid
+      end      
+    end
+  end
+  
+  describe "when name is already taken" do
+    before do
+      user_with_same_name = @user.dup
+      user_with_same_name.email = 'aDifferentEmail@gmail.com'
+      user_with_same_name.name_pretty = @user.name_pretty.upcase
+      user_with_same_name.save
+    end
+
     it { should_not be_valid }
   end
   
@@ -78,6 +119,7 @@ describe User do
   describe "when email address is already taken" do
     before do
       user_with_same_email = @user.dup
+      user_with_same_email.name_pretty = 'ADifferentName'
       user_with_same_email.email = @user.email.upcase
       user_with_same_email.save
     end
