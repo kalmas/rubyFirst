@@ -2,13 +2,16 @@
 #
 # Table name: users
 #
-#  id              :integer          not null, primary key
-#  name            :string(255)
-#  email           :string(255)
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#  password_digest :string(255)
-#  name_pretty     :string(255)
+#  id                :integer          not null, primary key
+#  name              :string(255)
+#  email             :string(255)
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  password_digest   :string(255)
+#  name_pretty       :string(255)
+#  remember_token    :string(255)
+#  verified          :boolean
+#  verification_pass :string(255)
 #
 
 require 'spec_helper'
@@ -30,6 +33,8 @@ describe User do
   it { should respond_to(:password_confirmation) }
   it { should respond_to(:remember_token) }
   it { should respond_to(:authenticate) }
+  it { should respond_to(:verified) }
+  it { should respond_to(:verification_pass) }
     
   it { should be_valid }
     
@@ -37,6 +42,18 @@ describe User do
     it "should have a name attribute that is lowercased name_pretty" do
       @user.name_pretty = "Kalmas"
       @user.name.should eq("kalmas")
+    end
+  end
+  
+  describe "when first saved" do
+    before { @user.save }
+    
+    it "should not be verified" do
+      @user.verified.should be_false
+    end
+    
+    it "should have a verification_pass" do
+      @user.verification_pass.should_not be_empty
     end
   end
   
